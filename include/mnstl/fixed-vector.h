@@ -3,8 +3,11 @@
 #include <iostream>
 #include <cassert>
 
-namespace mnstl
-{
+#define TRY_INCLUDING_INTERNAL_H
+#include "internal.h"
+#undef TRY_INCLUDING_INTERNAL_H
+
+MNSTL_NAMESPACE_BEGIN
 
 template <typename T, size_t N>
 class FixedVector
@@ -70,4 +73,4 @@ T& FixedVector<T, N>::operator[](const int index)
     return mArray[index];
 }
 
-} /* mnstl namespace */
+MNSTL_NAMESPACE_END
