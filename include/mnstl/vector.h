@@ -19,8 +19,8 @@ class VectorBase
 public:
     enum { MIN_CAPACITY = 8 };
 
-    virtual size_t capacity() const;
-    virtual size_t size() const;
+    size_t capacity() const;
+    size_t size() const;
 
 protected:
     T* mBegin;
@@ -28,7 +28,7 @@ protected:
     std::pair<T*, void*> mCapacity;
 
     VectorBase();
-    VectorBase(const size_t n);
+    VectorBase(size_t n);
 
     ~VectorBase();
 
@@ -91,9 +91,14 @@ VectorBase<T>::VectorBase()
 }
 
 template <typename T>
-VectorBase<T>::VectorBase(const size_t n)
+VectorBase<T>::VectorBase(size_t n)
     : mCapacity(nullptr, nullptr)
 {
+    if (n < MIN_CAPACITY)
+    {
+        n = MIN_CAPACITY;
+    }
+
     mBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
     mEnd = mBegin;
     GetCapacityPtrRef() = mBegin + n;
@@ -148,7 +153,7 @@ vector<T>::vector(const size_t n)
 
 template <typename T>
 vector<T>::vector(const this_type& rhs)
-    : base_type(rhs.size())
+    : base_type(rhs.capacity())
 {
     this->mEnd = std::copy(rhs.mBegin, rhs.mEnd, this->mBegin);
 }
@@ -202,7 +207,7 @@ void vector<T>::push_back(const T& value)
     if (this->mEnd >= this->GetCapacityPtrRef())
     {
         const size_t NEW_CAPACITY = (this->capacity() * 2);
-        T* newBegin = malloc(sizeof(T) * NEW_CAPACITY);
+        T* newBegin = reinterpret_cast<T*>(malloc(sizeof(T) * NEW_CAPACITY));
         T* newEnd = std::copy(this->mBegin, this->mEnd, newBegin);
 
         free(this->mBegin);
