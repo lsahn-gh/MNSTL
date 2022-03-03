@@ -23,9 +23,9 @@ public:
     size_t size() const;
 
 protected:
-    T* mBegin;
-    T* mEnd;
-    std::pair<T*, void*> mCapacity;
+    T*                      mBegin;
+    T*                      mEnd;
+    std::pair<T*, void*>    mCapacity;
 
     VectorBase();
     VectorBase(size_t n);
@@ -41,11 +41,14 @@ protected:
 template <typename T>
 class vector : public VectorBase<T>
 {
-    typedef VectorBase<T>       base_type;
-    typedef vector<T>           this_type;
+    typedef VectorBase<T>   base_type;
+    typedef vector<T>       this_type;
 
 public:
-    typedef T                   value_type;
+    typedef T               value_type;
+
+    typedef T*              iterator;
+    typedef const T*        const_iterator;
 
 public:
     vector();
@@ -66,11 +69,11 @@ public:
 
     void        push_back(const value_type& value);
 
-    T*          begin();
-    const T*    begin() const;
+    iterator        begin();
+    const_iterator  begin() const;
 
-    T*          end();
-    const T*    end() const;
+    iterator        end();
+    const_iterator  end() const;
 
     bool        empty() const;
 
@@ -224,25 +227,29 @@ void vector<T>::push_back(const T& value)
 }
 
 template <typename T>
-T* vector<T>::begin()
+typename vector<T>::iterator
+vector<T>::begin()
 {
     return this->mBegin;
 }
 
 template <typename T>
-const T* vector<T>::begin() const
+typename vector<T>::const_iterator
+vector<T>::begin() const
 {
     return this->mBegin;
 }
 
 template <typename T>
-T* vector<T>::end()
+typename vector<T>::iterator
+vector<T>::end()
 {
     return this->mEnd;
 }
 
 template <typename T>
-const T* vector<T>::end() const
+typename vector<T>::const_iterator
+vector<T>::end() const
 {
     return this->mEnd;
 }
@@ -256,7 +263,7 @@ bool vector<T>::empty() const
 template <typename T>
 void vector<T>::resize(const size_t n)
 {
-    T *newBegin = malloc(sizeof(T) * n);
+    T *newBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
     T *newEnd = std::copy(this->mBegin, (n >= this->size()) ? this->mEnd : (this->mBegin + n), newBegin);
 
     free(this->mBegin);
@@ -266,6 +273,23 @@ void vector<T>::resize(const size_t n)
     this->mBegin = newBegin;
     this->mEnd = newEnd;
     this->GetCapacityPtrRef() = (this->mBegin + n);
+}
+
+template <typename T>
+void vector<T>::reserve(const size_t n)
+{
+    if (this->mBegin != nullptr)
+    {
+        free(this->mBegin);
+
+        this->mBegin = nullptr;
+        this->mEnd = nullptr;
+        this->GetCapacityPtrRef() = nullptr;
+    }
+
+    this->mBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
+    this->mEnd = this->mBegin;
+    this->GetCapacityPtrRef() = this->mBegin + n;
 }
 
 MNSTL_NAMESPACE_END
