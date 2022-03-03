@@ -49,6 +49,8 @@ public:
 
     typedef T*              iterator;
     typedef const T*        const_iterator;
+    typedef T*              reverse_iterator;
+    typedef const T*        const_reverse_iterator;
 
 public:
     vector();
@@ -69,11 +71,15 @@ public:
 
     void        push_back(const value_type& value);
 
-    iterator        begin();
-    const_iterator  begin() const;
+    iterator                begin();
+    const_iterator          begin() const;
+    reverse_iterator        rbegin();
+    const_reverse_iterator  rbegin() const;
 
-    iterator        end();
-    const_iterator  end() const;
+    iterator                end();
+    const_iterator          end() const;
+    reverse_iterator        rend();
+    const_reverse_iterator  rend() const;
 
     bool        empty() const;
 
@@ -241,6 +247,22 @@ vector<T>::begin() const
 }
 
 template <typename T>
+typename vector<T>::reverse_iterator
+vector<T>::rbegin()
+{
+    // TODO
+    return this->mBegin;
+}
+
+template <typename T>
+typename vector<T>::const_reverse_iterator
+vector<T>::rbegin() const
+{
+    // TODO
+    return this->mBegin;
+}
+
+template <typename T>
 typename vector<T>::iterator
 vector<T>::end()
 {
@@ -250,6 +272,20 @@ vector<T>::end()
 template <typename T>
 typename vector<T>::const_iterator
 vector<T>::end() const
+{
+    return this->mEnd;
+}
+
+template <typename T>
+typename vector<T>::reverse_iterator
+vector<T>::rend()
+{
+    return this->mEnd;
+}
+
+template <typename T>
+typename vector<T>::const_reverse_iterator
+vector<T>::rend() const
 {
     return this->mEnd;
 }
