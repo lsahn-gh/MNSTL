@@ -15,11 +15,16 @@ class malloc_allocator
 public:
     malloc_allocator() = default;
 
-    void* allocate(std::size_t n)
-        { malloc(sizeof(T) * n); }
+    T* allocate(std::size_t n)
+    {
+        return reinterpret_cast<T*>(malloc(sizeof(T) * n));
+    }
 
     void deallocate(T* p, std::size_t n)
-        { if (p) free(p); }
+    {
+        if (p != nullptr)
+            free(reinterpret_cast<void*>(p));
+    }
 
 private:
     malloc_allocator(const malloc_allocator& allocator) = delete;
