@@ -6,64 +6,88 @@
 
 #include "iterator.h"
 
-#define TRY_INCLUDING_INTERNAL_H
-#include "internal.h"
-#undef TRY_INCLUDING_INTERNAL_H
+namespace mnstl
+{
 
-MNSTL_NAMESPACE_BEGIN
-
-// VectorBase has the following characteristics
-// 1. [mBegin, mEnd) type.
-// 2. 
-template <typename T>
+template <typename T, typename Allocator>
 class VectorBase
 {
 public:
-    enum { MIN_CAPACITY = 8 };
-
-    size_t capacity() const;
-    size_t size() const;
+    typedef Allocator               allocator_type;
+    typedef std::size_t             size_type;
+    typedef std::ptrdiff_t          difference_type;
 
 protected:
-    T*                      mBegin;
-    T*                      mEnd;
-    std::pair<T*, void*>    mCapacity;
+    T*                              mBegin;
+    T*                              mEnd;
+    std::pair<T*, allocator_type>   mCapacityAllocator;
 
+    T* & GetCapacityPtrRef()
+        { return mCapacityAllocator.first; }
+
+    allocator_type& GetAllocatorRef()
+        { return mCapacityAllocator.second; }
+
+    const allocator_type& GetAllocatorRef() const
+        { return mCapacityAllocator.second; }
+
+public:
     VectorBase();
-    VectorBase(size_t n);
+    VectorBase(const allocator_type& allocator);
+    VectorBase(size_type n, const allocator_type& allocator);
 
     ~VectorBase();
 
-    T*& GetCapacityPtrRef();
+    allocator_type&         get_allocator();
+    const allocator_type&   get_allocator() const;
+
+protected:
+    T*      DoAllocate(size_type n);
+    void    DoFree(T* p, size_type n);
 };
 
 
-// 'vector' has the following characteristics,
-// 1. ...
-template <typename T>
-class vector : public VectorBase<T>
+template <typename T, typename Allocator = std::allocator<T> >
+class vector : public VectorBase<T, Allocator>
 {
-    typedef VectorBase<T>   base_type;
-    typedef vector<T>       this_type;
+    typedef VectorBase<T, Allocator>    base_type;
+    typedef vector<T, Allocator>        this_type;
 
 public:
-    typedef T               value_type;
+    typedef T                           value_type;
 
     typedef T*                                      iterator;
     typedef const T*                                const_iterator;
     typedef mnstl_reverse_iterator<iterator>        reverse_iterator;
     typedef mnstl_reverse_iterator<const_iterator>  const_reverse_iterator;
+    typedef typename base_type::allocator_type      allocator_type;
+    typedef typename base_type::size_type           size_type;
+    typedef typename base_type::difference_type     difference_type;
+
+    using base_type::mBegin;
+    using base_type::mEnd;
+    using base_type::mCapacityAllocator;
+    using base_type::GetCapacityPtrRef;
+    using base_type::GetAllocatorRef;
+    using base_type::DoAllocate;
+    using base_type::DoFree;
 
 public:
+    enum { MIN_CAPACITY = 8 };
+
     vector();
-    vector(const size_t n);
+    vector(const allocator_type& allocator);
+    vector(size_type n, const allocator_type& allocator);
     vector(const this_type& rhs);
 
     ~vector();
 
     // extra operators
-    T&          at(const size_t index);
-    const T&    at(const size_t index) const;
+    size_type   capacity() const;
+    size_type   size() const;
+
+    T&          at(const size_type index);
+    const T&    at(const size_type index) const;
 
     T&          front();
     const T&    front() const;
@@ -85,42 +109,46 @@ public:
 
     bool        empty() const;
 
-    void        resize(const size_t n);
-    void        resize(const size_t n, const value_type& value);
-    void        reserve(const size_t n);
-
-private:
+    void        resize(const size_type n);
+    void        resize(const size_type n, const value_type& value);
+    void        reserve(const size_type n);
 };
 
+
 /* -- VectorBase -- */
-template <typename T>
-VectorBase<T>::VectorBase()
+template <typename T, typename Allocator>
+VectorBase<T, Allocator>::VectorBase()
     : mBegin(nullptr)
     , mEnd(nullptr)
-    , mCapacity(nullptr, nullptr)
+    /* , mCapacityAllocator(nullptr, allocator_type()) -> TODO */
 {
+    // empty
 }
 
-template <typename T>
-VectorBase<T>::VectorBase(size_t n)
-    : mCapacity(nullptr, nullptr)
+template <typename T, typename Allocator>
+VectorBase<T, Allocator>::VectorBase(const allocator_type& allocator)
+    : mBegin(nullptr)
+    , mEnd(nullptr)
+    , mCapacityAllocator(nullptr, allocator)
 {
-    if (n < MIN_CAPACITY)
-    {
-        n = MIN_CAPACITY;
-    }
+    // empty
+}
 
-    mBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
+template <typename T, typename Allocator>
+VectorBase<T, Allocator>::VectorBase(size_type n, const allocator_type& allocator)
+    : mCapacityAllocator(nullptr, allocator)
+{
+    mBegin = DoAllocate(n);
     mEnd = mBegin;
     GetCapacityPtrRef() = mBegin + n;
 }
 
-template <typename T>
-VectorBase<T>::~VectorBase()
+template <typename T, typename Allocator>
+VectorBase<T, Allocator>::~VectorBase()
 {
     if (mBegin != nullptr)
     {
-        free(mBegin);
+        DoFree(mBegin, static_cast<size_type>(GetCapacityPtrRef() - mBegin));
     }
 
     mBegin = nullptr;
@@ -128,204 +156,237 @@ VectorBase<T>::~VectorBase()
     GetCapacityPtrRef() = nullptr;
 }
 
-template <typename T>
-T*& VectorBase<T>::GetCapacityPtrRef()
+template <typename T, typename Allocator>
+typename VectorBase<T, Allocator>::allocator_type&
+VectorBase<T, Allocator>::get_allocator()
 {
-    return mCapacity.first;
+    return GetAllocatorRef();
 }
 
-template <typename T>
-size_t VectorBase<T>::capacity() const
+template <typename T, typename Allocator>
+const typename VectorBase<T, Allocator>::allocator_type&
+VectorBase<T, Allocator>::get_allocator() const
 {
-    return static_cast<size_t>(mCapacity.first - mBegin);
+    return GetAllocatorRef();
 }
 
-template <typename T>
-size_t VectorBase<T>::size() const
+template <typename T, typename Allocator>
+T* VectorBase<T, Allocator>::DoAllocate(size_type n)
 {
-    return static_cast<size_t>(mEnd - mBegin);
+    auto alloc = GetAllocatorRef();
+
+    return alloc.allocate(n);
+}
+
+template <typename T, typename Allocator>
+void VectorBase<T, Allocator>::DoFree(T* p, size_type n)
+{
+    auto alloc = GetAllocatorRef();
+
+    alloc.deallocate(p, n);
 }
 
 
 /* -- vector -- */
-template <typename T>
-vector<T>::vector()
+template <typename T, typename Allocator>
+vector<T, Allocator>::vector()
     : base_type()
 {
     // empty
 }
 
-template <typename T>
-vector<T>::vector(const size_t n)
-    : base_type(n)
+template <typename T, typename Allocator>
+vector<T, Allocator>::vector(const allocator_type& allocator)
+    : base_type(allocator)
 {
     // empty
 }
 
-template <typename T>
-vector<T>::vector(const this_type& rhs)
-    : base_type(rhs.capacity())
-{
-    this->mEnd = std::copy(rhs.mBegin, rhs.mEnd, this->mBegin);
-}
-
-template <typename T>
-vector<T>::~vector()
+template <typename T, typename Allocator>
+vector<T, Allocator>::vector(size_type n, const allocator_type& allocator)
+    : base_type(n, allocator)
 {
     // empty
 }
 
-template <typename T>
-inline T& vector<T>::at(const size_t index)
+template <typename T, typename Allocator>
+vector<T, Allocator>::vector(const this_type& rhs)
+    : base_type(rhs.size(), rhs.GetAllocatorRef())
 {
-    return *(this->mBegin + index);
+    mEnd = std::copy(rhs.mBegin, rhs.mEnd, mBegin);
 }
 
-template <typename T>
-inline const T& vector<T>::at(const size_t index) const
+template <typename T, typename Allocator>
+vector<T, Allocator>::~vector()
 {
-    return *(this->mBegin + index);
+    // empty
 }
 
-template <typename T>
-T& vector<T>::front()
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::size_type
+vector<T, Allocator>::capacity() const
 {
-    return *(this->mBegin);
+    return static_cast<size_type>(mCapacityAllocator.first - mBegin);
 }
 
-template <typename T>
-const T& vector<T>::front() const
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::size_type
+vector<T, Allocator>::size() const
 {
-    return *(this->mBegin);
+    return static_cast<size_type>(mEnd - mBegin);
 }
 
-template <typename T>
-T& vector<T>::back()
+template <typename T, typename Allocator>
+T& vector<T, Allocator>::at(const size_type index)
 {
-    return *(this->mEnd - 1);
+    return *(mBegin + index);
 }
 
-template <typename T>
-const T& vector<T>::back() const
+template <typename T, typename Allocator>
+const T& vector<T, Allocator>::at(const size_type index) const
 {
-    return *(this->mEnd - 1);
+    return *(mBegin + index);
+}
+
+template <typename T, typename Allocator>
+T& vector<T, Allocator>::front()
+{
+    return *(mBegin);
+}
+
+template <typename T, typename Allocator>
+const T& vector<T, Allocator>::front() const
+{
+    return *(mBegin);
+}
+
+template <typename T, typename Allocator>
+T& vector<T, Allocator>::back()
+{
+    return *(mEnd - 1);
+}
+
+template <typename T, typename Allocator>
+const T& vector<T, Allocator>::back() const
+{
+    return *(mEnd - 1);
 }
 
 // TODO must be called under lock!
-template <typename T>
-void vector<T>::push_back(const T& value)
+template <typename T, typename Allocator>
+void vector<T, Allocator>::push_back(const T& value)
 {
-    if (this->mEnd >= this->GetCapacityPtrRef())
+    if (mEnd >= GetCapacityPtrRef())
     {
-        const size_t NEW_CAPACITY = (this->capacity() * 2);
-        T* newBegin = reinterpret_cast<T*>(malloc(sizeof(T) * NEW_CAPACITY));
-        T* newEnd = std::copy(this->mBegin, this->mEnd, newBegin);
+        const size_type NEW_CAPACITY = (capacity() * 2);
+        T* newBegin = DoAllocate(NEW_CAPACITY);
+        T* newEnd = std::copy(mBegin, mEnd, newBegin);
 
-        free(this->mBegin);
+        DoFree(mBegin, capacity());
 
         // NOT SAFE for multi-threaded program!
 
-        this->mBegin = newBegin;
-        this->mEnd = newEnd;
-        this->GetCapacityPtrRef() = (this->mBegin + NEW_CAPACITY);
+        mBegin = newBegin;
+        mEnd = newEnd;
+        GetCapacityPtrRef() = (mBegin + NEW_CAPACITY);
     }
 
-    *(this->mEnd) = value;
-    (this->mEnd)++;
+    *(mEnd) = value;
+    (mEnd)++;
 }
 
-template <typename T>
-typename vector<T>::iterator
-vector<T>::begin()
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::iterator
+vector<T, Allocator>::begin()
 {
-    return this->mBegin;
+    return mBegin;
 }
 
-template <typename T>
-typename vector<T>::const_iterator
-vector<T>::begin() const
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_iterator
+vector<T, Allocator>::begin() const
 {
-    return this->mBegin;
+    return mBegin;
 }
 
-template <typename T>
-typename vector<T>::reverse_iterator
-vector<T>::rbegin()
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::reverse_iterator
+vector<T, Allocator>::rbegin()
 {
-    return reverse_iterator(this->mEnd);
+    return reverse_iterator(mEnd);
 }
 
-template <typename T>
-typename vector<T>::const_reverse_iterator
-vector<T>::rbegin() const
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_reverse_iterator
+vector<T, Allocator>::rbegin() const
 {
-    return const_reverse_iterator(this->mEnd);
+    return const_reverse_iterator(mEnd);
 }
 
-template <typename T>
-typename vector<T>::iterator
-vector<T>::end()
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::iterator
+vector<T, Allocator>::end()
 {
-    return this->mEnd;
+    return mEnd;
 }
 
-template <typename T>
-typename vector<T>::const_iterator
-vector<T>::end() const
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_iterator
+vector<T, Allocator>::end() const
 {
-    return this->mEnd;
+    return mEnd;
 }
 
-template <typename T>
-typename vector<T>::reverse_iterator
-vector<T>::rend()
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::reverse_iterator
+vector<T, Allocator>::rend()
 {
-    return reverse_iterator(this->mBegin);
+    return reverse_iterator(mBegin);
 }
 
-template <typename T>
-typename vector<T>::const_reverse_iterator
-vector<T>::rend() const
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_reverse_iterator
+vector<T, Allocator>::rend() const
 {
-    return const_reverse_iterator(this->mBegin);
+    return const_reverse_iterator(mBegin);
 }
 
-template <typename T>
-bool vector<T>::empty() const
+template <typename T, typename Allocator>
+bool vector<T, Allocator>::empty() const
 {
-    return (this->size() == 0);
+    return (size() == 0);
 }
 
-template <typename T>
-void vector<T>::resize(const size_t n)
+template <typename T, typename Allocator>
+void vector<T, Allocator>::resize(const size_type n)
 {
-    T *newBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
-    T *newEnd = std::copy(this->mBegin, (n >= this->size()) ? this->mEnd : (this->mBegin + n), newBegin);
+    T *newBegin = DoAllocate(n);
+    T *newEnd = std::copy(mBegin, (n >= size()) ? mEnd : (mBegin + n), newBegin);
 
-    free(this->mBegin);
+    DoFree(mBegin, capacity());
 
     // NOT SAFE for multi-threaded program!
 
-    this->mBegin = newBegin;
-    this->mEnd = newEnd;
-    this->GetCapacityPtrRef() = (this->mBegin + n);
+    mBegin = newBegin;
+    mEnd = newEnd;
+    GetCapacityPtrRef() = (mBegin + n);
 }
 
-template <typename T>
-void vector<T>::reserve(const size_t n)
+template <typename T, typename Allocator>
+void vector<T, Allocator>::reserve(const size_type n)
 {
-    if (this->mBegin != nullptr)
+    if (mBegin != nullptr)
     {
-        free(this->mBegin);
+        DoFree(mBegin, capacity());
 
-        this->mBegin = nullptr;
-        this->mEnd = nullptr;
-        this->GetCapacityPtrRef() = nullptr;
+        mBegin = nullptr;
+        mEnd = nullptr;
+        GetCapacityPtrRef() = nullptr;
     }
 
-    this->mBegin = reinterpret_cast<T*>(malloc(sizeof(T) * n));
-    this->mEnd = this->mBegin;
-    this->GetCapacityPtrRef() = this->mBegin + n;
+    mBegin = DoAllocate(n);
+    mEnd = mBegin;
+    GetCapacityPtrRef() = mBegin + n;
 }
 
-MNSTL_NAMESPACE_END
+} /* namespace mnstl */

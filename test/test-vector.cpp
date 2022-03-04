@@ -10,21 +10,24 @@ int main()
         vector<int> vec1;
         assert(vec1.capacity() == 0);
 
-        vector<int> vec2(5);
-        assert(vec2.capacity() == 8);
+        vector<int> vec2;
+        vec2.reserve(5);
+        assert(vec2.capacity() == 5);
 
-        vector<float> vec3(25);
+        vector<float> vec3;
+        vec3.reserve(25);
         assert(vec3.capacity() == 25);
 
         vector<float> vec4 = vec3;
-        assert(vec4.capacity() == 25);
+        assert(vec4.capacity() == 0);
     }
 
     // size, capacity and growing feature if full
     {
         const size_t MAX_ITEMS = 20;
 
-        vector<int> vec1(10);
+        vector<int> vec1;
+        vec1.reserve(10);
         assert(vec1.size() == 0);
         assert(vec1.capacity() == 10);
 
@@ -59,7 +62,9 @@ int main()
 
     // at, front and back
     {
-        vector<int> vec1(20);
+        vector<int> vec1;
+        vec1.reserve(20);
+
         for (size_t n = 0; n < 11; n++)
         {
             vec1.push_back(n);
