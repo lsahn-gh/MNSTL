@@ -242,6 +242,20 @@ vector<T, Allocator>::at(const size_type index) const
 
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::reference
+vector<T, Allocator>::operator[](size_type pos)
+{
+    return *(mBegin + pos);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_reference
+vector<T, Allocator>::operator[](size_type pos) const
+{
+    return *(mBegin + pos);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::reference
 vector<T, Allocator>::front()
 {
     return *(mBegin);

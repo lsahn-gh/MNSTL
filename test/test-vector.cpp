@@ -60,7 +60,7 @@ int main()
         assert(vec1.capacity() == 1);
     }
 
-    // at, front and back
+    // at, operator[], front and back
     {
         vector<int> vec1;
         vec1.reserve(20);
@@ -72,8 +72,17 @@ int main()
         assert(vec1.size() == 11);
 
         assert(vec1.front() == 0);
+        assert(vec1[0] == 0);
+
         assert(vec1.at(1) == 1);
+        vec1[1] = 200;
+        assert(vec1[1] == 200);
+        assert(vec1.at(1) == 200);
+
         assert(vec1.at(9) == 9);
+        assert(vec1[9] == 9);
+
+        assert(vec1[vec1.size() - 1] == 10);
         assert(vec1.back() == 10);
     }
 
