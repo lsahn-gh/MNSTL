@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include "iterator.h"
+
 #define TRY_INCLUDING_INTERNAL_H
 #include "internal.h"
 #undef TRY_INCLUDING_INTERNAL_H
@@ -47,10 +49,10 @@ class vector : public VectorBase<T>
 public:
     typedef T               value_type;
 
-    typedef T*              iterator;
-    typedef const T*        const_iterator;
-    typedef T*              reverse_iterator;
-    typedef const T*        const_reverse_iterator;
+    typedef T*                                      iterator;
+    typedef const T*                                const_iterator;
+    typedef mnstl_reverse_iterator<iterator>        reverse_iterator;
+    typedef mnstl_reverse_iterator<const_iterator>  const_reverse_iterator;
 
 public:
     vector();
@@ -250,16 +252,14 @@ template <typename T>
 typename vector<T>::reverse_iterator
 vector<T>::rbegin()
 {
-    // TODO
-    return this->mBegin;
+    return reverse_iterator(this->mEnd);
 }
 
 template <typename T>
 typename vector<T>::const_reverse_iterator
 vector<T>::rbegin() const
 {
-    // TODO
-    return this->mBegin;
+    return const_reverse_iterator(this->mEnd);
 }
 
 template <typename T>
@@ -280,14 +280,14 @@ template <typename T>
 typename vector<T>::reverse_iterator
 vector<T>::rend()
 {
-    return this->mEnd;
+    return reverse_iterator(this->mBegin);
 }
 
 template <typename T>
 typename vector<T>::const_reverse_iterator
 vector<T>::rend() const
 {
-    return this->mEnd;
+    return const_reverse_iterator(this->mBegin);
 }
 
 template <typename T>
