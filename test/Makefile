@@ -1,9 +1,9 @@
 CC = g++
 CXXFLAGS := -g -Og
 CXXFLAGS += -I../include
-CXXFLAGS += -fpermissive
 
 TARGETS := \
+	test-allocator \
 	test-vector \
 	test-fixed-vector
 
