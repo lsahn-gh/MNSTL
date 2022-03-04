@@ -3,11 +3,8 @@
 #include <memory>
 #include <cstdlib>
 
-#define TRY_INCLUDING_INTERNAL_H
-#include "internal.h"
-#undef TRY_INCLUDING_INTERNAL_H
-
-MNSTL_NAMESPACE_BEGIN
+namespace mnstl
+{
 
 // malloc/free wrapping allocator class for 'Allocator' of Containers.
 template <typename T>
@@ -32,4 +29,4 @@ private:
     malloc_allocator(const malloc_allocator& allocator) = delete;
 };
 
-MNSTL_NAMESPACE_END
+} /* namespace mnstl */

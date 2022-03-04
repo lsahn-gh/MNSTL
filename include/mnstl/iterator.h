@@ -7,13 +7,10 @@
 
 #else /* USE_MNSTL_ITERATOR_IMPL */
 
-#define TRY_INCLUDING_INTERNAL_H
-#include "internal.h"
-#undef TRY_INCLUDING_INTERNAL_H
-
 # define mnstl_reverse_iterator mnstl::reverse_iterator
 
-MNSTL_NAMESPACE_BEGIN
+namespace mnstl
+{
 
 template <typename Iterator>
 class reverse_iterator
@@ -38,6 +35,6 @@ public:
         { return mIterator; }
 };
 
-MNSTL_NAMESPACE_END
+} /* namespace mnstl */
 
 #endif /* USE_MNSTL_ITERATOR_IMPL */

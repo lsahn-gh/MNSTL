@@ -3,11 +3,8 @@
 #include <iostream>
 #include <cassert>
 
-#define TRY_INCLUDING_INTERNAL_H
-#include "internal.h"
-#undef TRY_INCLUDING_INTERNAL_H
-
-MNSTL_NAMESPACE_BEGIN
+namespace mnstl
+{
 
 template <typename T, size_t N>
 class FixedVector
@@ -83,4 +80,4 @@ T& FixedVector<T, N>::operator[](const int index)
     return mBuffer[index];
 }
 
-MNSTL_NAMESPACE_END
+} /* namespace mnstl */
