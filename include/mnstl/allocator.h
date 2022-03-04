@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cstdlib>
 
 #define TRY_INCLUDING_INTERNAL_H
 #include "internal.h"
@@ -14,6 +15,7 @@ class malloc_allocator
 {
 public:
     malloc_allocator() = default;
+    ~malloc_allocator() = default;
 
     T* allocate(std::size_t n)
     {
@@ -28,7 +30,6 @@ public:
 
 private:
     malloc_allocator(const malloc_allocator& allocator) = delete;
-    ~malloc_allocator() = delete;
 };
 
 MNSTL_NAMESPACE_END
