@@ -50,12 +50,15 @@ protected:
 template <typename T, typename Allocator = std::allocator<T> >
 class vector : public VectorBase<T, Allocator>
 {
-    typedef VectorBase<T, Allocator>    base_type;
-    typedef vector<T, Allocator>        this_type;
+    typedef VectorBase<T, Allocator>                base_type;
+    typedef vector<T, Allocator>                    this_type;
 
 public:
-    typedef T                           value_type;
-
+    typedef T                                       value_type;
+    typedef T*                                      pointer;
+    typedef const T*                                const_pointer;
+    typedef T&                                      reference;
+    typedef const T&                                const_reference;
     typedef T*                                      iterator;
     typedef const T*                                const_iterator;
     typedef mnstl_reverse_iterator<iterator>        reverse_iterator;
@@ -82,18 +85,17 @@ public:
 
     ~vector();
 
-    // extra operators
-    size_type   capacity() const;
-    size_type   size() const;
+    reference       at(const size_type index);
+    const_reference at(const size_type index) const;
 
-    T&          at(const size_type index);
-    const T&    at(const size_type index) const;
+    reference       operator[](size_type pos);
+    const_reference operator[](size_type pos) const;
 
-    T&          front();
-    const T&    front() const;
+    reference       front();
+    const_reference front() const;
 
-    T&          back();
-    const T&    back() const;
+    reference       back();
+    const_reference back() const;
 
     void        push_back(const value_type& value);
 
@@ -108,6 +110,8 @@ public:
     const_reverse_iterator  rend() const;
 
     bool        empty() const;
+    size_type   capacity() const;
+    size_type   size() const;
 
     void        resize(const size_type n);
     void        resize(const size_type n, const value_type& value);
@@ -223,58 +227,50 @@ vector<T, Allocator>::~vector()
 }
 
 template <typename T, typename Allocator>
-typename vector<T, Allocator>::size_type
-vector<T, Allocator>::capacity() const
-{
-    return static_cast<size_type>(mCapacityAllocator.first - mBegin);
-}
-
-template <typename T, typename Allocator>
-typename vector<T, Allocator>::size_type
-vector<T, Allocator>::size() const
-{
-    return static_cast<size_type>(mEnd - mBegin);
-}
-
-template <typename T, typename Allocator>
-T& vector<T, Allocator>::at(const size_type index)
+typename vector<T, Allocator>::reference
+vector<T, Allocator>::at(const size_type index)
 {
     return *(mBegin + index);
 }
 
 template <typename T, typename Allocator>
-const T& vector<T, Allocator>::at(const size_type index) const
+typename vector<T, Allocator>::const_reference
+vector<T, Allocator>::at(const size_type index) const
 {
     return *(mBegin + index);
 }
 
 template <typename T, typename Allocator>
-T& vector<T, Allocator>::front()
+typename vector<T, Allocator>::reference
+vector<T, Allocator>::front()
 {
     return *(mBegin);
 }
 
 template <typename T, typename Allocator>
-const T& vector<T, Allocator>::front() const
+typename vector<T, Allocator>::const_reference
+vector<T, Allocator>::front() const
 {
     return *(mBegin);
 }
 
 template <typename T, typename Allocator>
-T& vector<T, Allocator>::back()
+typename vector<T, Allocator>::reference
+vector<T, Allocator>::back()
 {
     return *(mEnd - 1);
 }
 
 template <typename T, typename Allocator>
-const T& vector<T, Allocator>::back() const
+typename vector<T, Allocator>::const_reference
+vector<T, Allocator>::back() const
 {
     return *(mEnd - 1);
 }
 
 // TODO must be called under lock!
 template <typename T, typename Allocator>
-void vector<T, Allocator>::push_back(const T& value)
+void vector<T, Allocator>::push_back(const value_type& value)
 {
     if (mEnd >= GetCapacityPtrRef())
     {
@@ -355,6 +351,20 @@ template <typename T, typename Allocator>
 bool vector<T, Allocator>::empty() const
 {
     return (size() == 0);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::size_type
+vector<T, Allocator>::capacity() const
+{
+    return static_cast<size_type>(mCapacityAllocator.first - mBegin);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::size_type
+vector<T, Allocator>::size() const
+{
+    return static_cast<size_type>(mEnd - mBegin);
 }
 
 template <typename T, typename Allocator>
