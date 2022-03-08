@@ -85,8 +85,8 @@ public:
 
     ~vector();
 
-    reference       at(const size_type index);
-    const_reference at(const size_type index) const;
+    reference       at(size_type pos);
+    const_reference at(size_type pos) const;
 
     reference       operator[](size_type pos);
     const_reference operator[](size_type pos) const;
@@ -228,16 +228,22 @@ vector<T, Allocator>::~vector()
 
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::reference
-vector<T, Allocator>::at(const size_type index)
+vector<T, Allocator>::at(size_type pos)
 {
-    return *(mBegin + index);
+    if (pos >= size())
+        throw std::out_of_range("vector::at() -- out of range");
+
+    return *(mBegin + pos);
 }
 
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::const_reference
-vector<T, Allocator>::at(const size_type index) const
+vector<T, Allocator>::at(size_type pos) const
 {
-    return *(mBegin + index);
+    if (pos >= size())
+        throw std::out_of_range("vector::at() -- out of range");
+
+    return *(mBegin + pos);
 }
 
 template <typename T, typename Allocator>
