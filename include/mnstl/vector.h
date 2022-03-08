@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "iterator.h"
+#include "memory.h"
 
 namespace mnstl
 {
@@ -116,6 +117,7 @@ public:
     size_type   capacity() const;
     size_type   size() const;
 
+    void        clear();
     void        resize(const size_type n);
     void        resize(const size_type n, const value_type& value);
     void        reserve(const size_type n);
@@ -427,6 +429,13 @@ vector<T, Allocator>::capacity() const
 /* -- capacity -- */
 
 /* -- modifiers -- */
+template <typename T, typename Allocator>
+void vector<T, Allocator>::clear()
+{
+    mnstl::destruct(mBegin, mEnd);
+    mEnd = mBegin;
+}
+
 template <typename T, typename Allocator>
 void vector<T, Allocator>::resize(const size_type n)
 {
