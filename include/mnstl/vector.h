@@ -97,6 +97,9 @@ public:
     reference       back();
     const_reference back() const;
 
+    pointer         data();
+    const_pointer   data() const;
+
     void        push_back(const value_type& value);
 
     iterator                begin();
@@ -286,6 +289,20 @@ typename vector<T, Allocator>::const_reference
 vector<T, Allocator>::back() const
 {
     return *(mEnd - 1);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::pointer
+vector<T, Allocator>::data()
+{
+    return mBegin;
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_pointer
+vector<T, Allocator>::data() const
+{
+    return mBegin;
 }
 
 // TODO must be called under lock!
