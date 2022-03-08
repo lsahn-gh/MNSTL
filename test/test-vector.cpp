@@ -1,24 +1,22 @@
 #include "test.h"
 #include <mnstl/vector.h>
 
-using namespace mnstl;
-
 int main()
 {
     // constructor and capacity
     {
-        vector<int> vec1;
+        mnstl::vector<int> vec1;
         assert(vec1.capacity() == 0);
 
-        vector<int> vec2;
+        mnstl::vector<int> vec2;
         vec2.reserve(5);
         assert(vec2.capacity() == 5);
 
-        vector<float> vec3;
+        mnstl::vector<float> vec3;
         vec3.reserve(25);
         assert(vec3.capacity() == 25);
 
-        vector<float> vec4 = vec3;
+        mnstl::vector<float> vec4 = vec3;
         assert(vec4.capacity() == 0);
     }
 
@@ -26,7 +24,7 @@ int main()
     {
         const size_t MAX_ITEMS = 20;
 
-        vector<int> vec1;
+        mnstl::vector<int> vec1;
         vec1.reserve(10);
         assert(vec1.size() == 0);
         assert(vec1.capacity() == 10);
@@ -45,7 +43,7 @@ int main()
 
     // empty, resize and reserve
     {
-        vector<int> vec1;
+        mnstl::vector<int> vec1;
         vec1.reserve(11);
         assert(vec1.empty() == true);
         assert(vec1.size() == 0);
@@ -62,7 +60,7 @@ int main()
 
     // at, operator[], front and back
     {
-        vector<int> vec1;
+        mnstl::vector<int> vec1;
         vec1.reserve(20);
 
         for (size_t n = 0; n < 11; n++)
@@ -89,7 +87,7 @@ int main()
     // iterator
     {
         size_t n;
-        vector<int> vec1;
+        mnstl::vector<int> vec1;
         vec1.reserve(10);
 
         for (n = 0; n < vec1.capacity(); ++n)
