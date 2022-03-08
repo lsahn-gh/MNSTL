@@ -104,11 +104,11 @@ public:
 
     iterator                begin();
     const_iterator          begin() const;
-    reverse_iterator        rbegin();
-    const_reverse_iterator  rbegin() const;
-
     iterator                end();
     const_iterator          end() const;
+
+    reverse_iterator        rbegin();
+    const_reverse_iterator  rbegin() const;
     reverse_iterator        rend();
     const_reverse_iterator  rend() const;
 
@@ -229,6 +229,7 @@ vector<T, Allocator>::~vector()
     // empty
 }
 
+/* -- element access -- */
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::reference
 vector<T, Allocator>::at(size_type pos)
@@ -304,6 +305,7 @@ vector<T, Allocator>::data() const
 {
     return mBegin;
 }
+/* -- element access -- */
 
 // TODO must be called under lock!
 template <typename T, typename Allocator>
@@ -328,6 +330,7 @@ void vector<T, Allocator>::push_back(const value_type& value)
     (mEnd)++;
 }
 
+/* -- iterators -- */
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::iterator
 vector<T, Allocator>::begin()
@@ -340,20 +343,6 @@ typename vector<T, Allocator>::const_iterator
 vector<T, Allocator>::begin() const
 {
     return mBegin;
-}
-
-template <typename T, typename Allocator>
-typename vector<T, Allocator>::reverse_iterator
-vector<T, Allocator>::rbegin()
-{
-    return reverse_iterator(mEnd);
-}
-
-template <typename T, typename Allocator>
-typename vector<T, Allocator>::const_reverse_iterator
-vector<T, Allocator>::rbegin() const
-{
-    return const_reverse_iterator(mEnd);
 }
 
 template <typename T, typename Allocator>
@@ -372,6 +361,19 @@ vector<T, Allocator>::end() const
 
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::reverse_iterator
+vector<T, Allocator>::rbegin()
+{
+    return reverse_iterator(mEnd);
+}
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::const_reverse_iterator
+vector<T, Allocator>::rbegin() const
+{
+    return const_reverse_iterator(mEnd);
+}
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::reverse_iterator
 vector<T, Allocator>::rend()
 {
     return reverse_iterator(mBegin);
@@ -383,7 +385,9 @@ vector<T, Allocator>::rend() const
 {
     return const_reverse_iterator(mBegin);
 }
+/* -- iterators -- */
 
+/* -- capacity -- */
 template <typename T, typename Allocator>
 bool vector<T, Allocator>::empty() const
 {
@@ -392,31 +396,9 @@ bool vector<T, Allocator>::empty() const
 
 template <typename T, typename Allocator>
 typename vector<T, Allocator>::size_type
-vector<T, Allocator>::capacity() const
-{
-    return static_cast<size_type>(mCapacityAllocator.first - mBegin);
-}
-
-template <typename T, typename Allocator>
-typename vector<T, Allocator>::size_type
 vector<T, Allocator>::size() const
 {
     return static_cast<size_type>(mEnd - mBegin);
-}
-
-template <typename T, typename Allocator>
-void vector<T, Allocator>::resize(const size_type n)
-{
-    T *newBegin = DoAllocate(n);
-    T *newEnd = std::copy(mBegin, (n >= size()) ? mEnd : (mBegin + n), newBegin);
-
-    DoFree(mBegin, capacity());
-
-    // NOT SAFE for multi-threaded program!
-
-    mBegin = newBegin;
-    mEnd = newEnd;
-    GetCapacityPtrRef() = (mBegin + n);
 }
 
 template <typename T, typename Allocator>
@@ -435,5 +417,30 @@ void vector<T, Allocator>::reserve(const size_type n)
     mEnd = mBegin;
     GetCapacityPtrRef() = mBegin + n;
 }
+
+template <typename T, typename Allocator>
+typename vector<T, Allocator>::size_type
+vector<T, Allocator>::capacity() const
+{
+    return static_cast<size_type>(mCapacityAllocator.first - mBegin);
+}
+/* -- capacity -- */
+
+/* -- modifiers -- */
+template <typename T, typename Allocator>
+void vector<T, Allocator>::resize(const size_type n)
+{
+    T *newBegin = DoAllocate(n);
+    T *newEnd = std::copy(mBegin, (n >= size()) ? mEnd : (mBegin + n), newBegin);
+
+    DoFree(mBegin, capacity());
+
+    // NOT SAFE for multi-threaded program!
+
+    mBegin = newBegin;
+    mEnd = newEnd;
+    GetCapacityPtrRef() = (mBegin + n);
+}
+/* -- modifiers -- */
 
 } /* namespace mnstl */
