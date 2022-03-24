@@ -3,81 +3,110 @@
 #include <iostream>
 #include <cassert>
 
+#include "vector.h"
+
 namespace mnstl
 {
 
-template <typename T, size_t N>
-class FixedVector
+template <typename T, size_t N, typename FixedAllocator = std::allocator<T> >
+class fixed_vector : public vector<T, FixedAllocator>
 {
+    typedef vector<T, FixedAllocator>               base_type;
+    typedef fixed_vector<T, N, FixedAllocator>      this_type;
+
 public:
-    FixedVector();
-    ~FixedVector();
+    typedef T                                       value_type;
+    typedef T*                                      pointer;
+    typedef const T*                                const_pointer;
+    typedef T&                                      reference;
+    typedef const T&                                const_reference;
+    typedef T*                                      iterator;
+    typedef const T*                                const_iterator;
+    typedef mnstl_reverse_iterator<iterator>        reverse_iterator;
+    typedef mnstl_reverse_iterator<const_iterator>  const_reverse_iterator;
+    typedef typename base_type::allocator_type      allocator_type;
+    typedef typename base_type::size_type           size_type;
+    typedef typename base_type::difference_type     difference_type;
 
-    bool Add(const T& value);
-    void Clear();
-    size_t GetSize() const;
-    size_t GetCapacity() const;
+    using base_type::DoAllocate;
+    using base_type::DoFree;
+    using base_type::GetAllocatorRef;
+    using base_type::GetCapacityPtrRef;
+    using base_type::mBegin;
+    using base_type::mCapacityAllocator;
+    using base_type::mEnd;
 
-    T& operator[](const int index);
+public:
+    fixed_vector();
+    fixed_vector(const allocator_type& allocator);
+    fixed_vector(const this_type& rhs);
 
-private:
-    size_t mSize;
-    size_t mCapacity;
-    T* mBuffer;
+    ~fixed_vector();
+
+    virtual reference       operator[](size_type pos);
+    virtual const_reference operator[](size_type pos) const;
+
+    virtual void            push_back(const value_type& value);
 };
 
-// Implementations
-template <typename T, size_t N>
-FixedVector<T, N>::FixedVector()
-    : mSize(0)
-    , mCapacity(N)
+
+/* -- fixed_vector -- */
+template <typename T, size_t N, typename FixedAllocator>
+fixed_vector<T, N, FixedAllocator>::fixed_vector()
+    : base_type()
 {
-    mBuffer = new T[N];
+    this->reserve(N);
 }
 
-template <typename T, size_t N>
-FixedVector<T, N>::~FixedVector()
+template <typename T, size_t N, typename FixedAllocator>
+fixed_vector<T, N, FixedAllocator>::fixed_vector(const allocator_type& allocator)
+    : base_type(N, allocator)
 {
-    delete[] mBuffer;
+    // empty
 }
 
-template <typename T, size_t N>
-bool FixedVector<T, N>::Add(const T& value)
+template <typename T, size_t N, typename FixedAllocator>
+fixed_vector<T, N, FixedAllocator>::fixed_vector(const this_type& rhs)
+    : base_type(rhs.size(), rhs.GetAllocatorRef())
 {
-    if (mSize >= mCapacity)
-    {
-        return false;
-    }
-
-    mBuffer[mSize++] = value;
-    return true;
+    // empty
 }
 
-template <typename T, size_t N>
-void FixedVector<T, N>::Clear()
+template <typename T, size_t N, typename FixedAllocator>
+fixed_vector<T, N, FixedAllocator>::~fixed_vector()
 {
-    mSize = 0;
+    // empty
 }
 
-template <typename T, size_t N>
-size_t FixedVector<T, N>::GetSize() const
+template <typename T, size_t N, typename FixedAllocator>
+typename fixed_vector<T, N, FixedAllocator>::reference
+fixed_vector<T, N, FixedAllocator>::operator[](size_type pos)
 {
-    return mSize;
+    if (pos >= this->capacity())
+        throw std::out_of_range("vector::operator[] -- out of range");
+
+    return *(mBegin + pos);
 }
 
-template <typename T, size_t N>
-size_t FixedVector<T, N>::GetCapacity() const
+template <typename T, size_t N, typename FixedAllocator>
+typename fixed_vector<T, N, FixedAllocator>::const_reference
+fixed_vector<T, N, FixedAllocator>::operator[](size_type pos) const
 {
-    return mCapacity;
+    if (pos >= this->capacity())
+        throw std::out_of_range("vector::operator[] -- out of range");
+
+    return *(mBegin + pos);
 }
 
-template <typename T, size_t N>
-T& FixedVector<T, N>::operator[](const int index)
+template <typename T, size_t N, typename FixedAllocator>
+void fixed_vector<T, N, FixedAllocator>::push_back(const value_type& value)
 {
-    assert((0 <= index) && (index < mCapacity));
-    /* should we deal with 'mSize == 0' case? */
+    if (mEnd >= GetCapacityPtrRef())
+        throw std::out_of_range("vector::push_back -- no empty!");
 
-    return mBuffer[index];
+    *(mEnd) = value;
+    (mEnd)++;
 }
+/* -- fixed_vector -- */
 
 } /* namespace mnstl */
