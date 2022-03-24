@@ -89,8 +89,8 @@ public:
     reference       at(size_type pos);
     const_reference at(size_type pos) const;
 
-    reference       operator[](size_type pos);
-    const_reference operator[](size_type pos) const;
+    virtual reference       operator[](size_type pos);
+    virtual const_reference operator[](size_type pos) const;
 
     reference       front();
     const_reference front() const;
@@ -101,7 +101,7 @@ public:
     pointer         data();
     const_pointer   data() const;
 
-    void        push_back(const value_type& value);
+    virtual void            push_back(const value_type& value);
 
     iterator                begin();
     const_iterator          begin() const;
